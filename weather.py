@@ -1,80 +1,51 @@
-import csv
-import sys
+import requests
+import time
+from datetime import datetime
 
+def get_weather(city):
 
-def main():
+    #import data from openweather
+    
+    ## input your API_KEY FROM https://openweathermap.org/ to appid
+    appid = ""
+    URL = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={appid}&units=metric'
 
-    # Check for command-line usage
-    if len(sys.argv) != 3:
-        sys.exit = csv.DictReader(file)
-    # Read database file into a variable
-    data = []
-    filename = sys.argv[1]
-    with open(filename, 'r') as file:
-        reader = csv.DictReader(file)
-        for i in reader:
-            data.append(i)
-    # Read DNA sequence file into a variable
-    filename1 = sys.argv[2]
-    with open(filename1, 'r') as file:
-        dna = file.read()
+    r = requests.get(URL)
+    rjson = r.json()
+    # save weather data
+    condition = rjson['weather'][0]['main']
+    description = rjson['weather'][0]['description']
 
-    # Find longest match of each STR in DNA sequence
-    subsequences = list(data[0].keys())[1:]
+    # temp info
+    temp = rjson['main']['temp']
+    temp_min = rjson['main']['temp_min']
+    temp_max = rjson['main']['temp_max']
 
-    result = {}
-    for sub in subsequences:
-        result[sub] = longest_match(dna, sub)
+    # wind info
+    wind_speed = rjson['wind']['speed']
 
-    # Check database for matching profiles
-    for person in data:
-        match = 0
-        for sub in subsequences:
-            if int(person[sub]) == result[sub]:
-                match += 1
-        if match == len(subsequences):
-            print(person["name"])
-            return
-    print("No match")
-    return
+    # sunrise and sunset
+    sunrise = rjson['sys']['sunrise']
+    sunset = rjson['sys']['sunset']
+    # to int for datetime
+    sun_rise = int(sunrise)
+    sun_set = int(sunset)
 
+    #humidity and preassure
+    humidity = rjson['main']['humidity']
+    preassure = rjson['main']['pressure']
 
-def longest_match(sequence, subsequence):
-    """Returns length of longest run of subsequence in sequence."""
+    # print weather
+    print("Weather today: {}\n".format(description))
+    print("The temperature should be around: {}°C\nmax.temp: {}°C and min_temp: {}°C ".format(temp, temp_max, temp_min))
+    print(" ")
+    print("Wind speed: {} m/s".format(wind_speed))
+    print(" ")
+    print("Sunrise will be at: " + datetime.utcfromtimestamp(sun_rise).strftime('%H:%M:%S') + " UTC time")
+    print("Sunset will be at: " + datetime.utcfromtimestamp(sun_set).strftime('%H:%M:%S') + " UTC time")
+    print(" ")
+    print("Humidity {}%, Preassure: {} hPa".format(humidity, preassure))
+while True:
+    get_weather(input("city: "))
+    time.sleep(60)
 
-    # Initialize variables
-    longest_run = 0
-    subsequence_length = len(subsequence)
-    sequence_length = len(sequence)
-
-    # Check each character in sequence for most consecutive runs of subsequence
-    for i in range(sequence_length):
-
-        # Initialize count of consecutive runs
-        count = 0
-
-        # Check for a subsequence match in a "substring" (a subset of characters) within sequence
-        # If a match, move substring to next potential match in sequence
-        # Continue moving substring and checking for matches until out of consecutive matches
-        while True:
-
-            # Adjust substring start and end
-            start = i + count * subsequence_length
-            end = start + subsequence_length
-
-            # If there is a match in the substring
-            if sequence[start:end] == subsequence:
-                count += 1
-
-            # If there is no match in the substring
-            else:
-                break
-
-        # Update most consecutive matches found
-        longest_run = max(longest_run, count)
-
-    # After checking for runs at each character in seqeuence, return longest run found
-    return longest_run
-
-
-main()
